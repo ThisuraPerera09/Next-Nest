@@ -21,6 +21,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ id, title, description, dueDate, pr
     onStatusChange(id, newStatus);
   };
 
+
+  
+
   return (
     <div className="p-6 border border-gray-200 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
       <h3 className="text-2xl font-bold text-gray-800 mb-2">{title}</h3>
@@ -33,6 +36,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ id, title, description, dueDate, pr
         <span className="mr-2">Project:</span>
         <span className="font-medium text-gray-700">{projectTitle}</span>
       </div>
+    
       <div className="relative">
         <select
           value={status}

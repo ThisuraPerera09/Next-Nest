@@ -24,7 +24,9 @@ const Projects = () => {
     }
 
     const userId = session.user?.id;
-    const accessToken = session.backendTokens?.accessToken || '';
+    const accessToken = session.backendTokens?.accessToken;
+
+    //Get the projects belongs to the current user
 
     const fetchProjects = async () => {
       try {

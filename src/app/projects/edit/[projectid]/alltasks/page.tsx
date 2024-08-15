@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Backend_URL } from '@/lib/Constants';
-import TaskCard from '@/components/TaskCard';
+import TaskCard2 from '@/components/TaskCard2';
 
 interface AllTasksPageProps {
   params: {
@@ -20,7 +20,7 @@ const AllTasksPage: React.FC<AllTasksPageProps> = ({ params }) => {
   const [filterStatus, setFilterStatus] = useState<string | null>(null); 
   const [startDate, setStartDate] = useState<string>(''); 
   const [endDate, setEndDate] = useState<string>(''); 
-  const [assignees, setAssignees] = useState<string[]>([]);
+  const [assignees, setAssignees] = useState<any[]>([]); // Updated type
   const [selectedAssignee, setSelectedAssignee] = useState<string | null>(null);
   const router = useRouter();
   const { projectid } = params; 
@@ -34,7 +34,6 @@ const AllTasksPage: React.FC<AllTasksPageProps> = ({ params }) => {
       return;
     }
 
-    // Fetch tasks
     const fetchTasks = async () => {
       try {
         const response = await fetch(`${Backend_URL}/tasks/project/${projectid}`, {
@@ -54,7 +53,6 @@ const AllTasksPage: React.FC<AllTasksPageProps> = ({ params }) => {
       }
     };
 
-    // Fetch assignees
     const fetchAssignees = async () => {
       try {
         const response = await fetch(`${Backend_URL}/user`, {
@@ -66,7 +64,7 @@ const AllTasksPage: React.FC<AllTasksPageProps> = ({ params }) => {
           throw new Error('Failed to fetch assignees');
         }
         const usersData = await response.json();
-        setAssignees(usersData.map((user: { name: string }) => user.name));
+        setAssignees(usersData);
       } catch (error) {
         setError(error.message);
       }
@@ -141,13 +139,12 @@ const AllTasksPage: React.FC<AllTasksPageProps> = ({ params }) => {
     setSelectedAssignee(e.target.value);
   };
 
-  // Filter and search logic
   const filteredTasks = tasks.filter((task) => {
     const matchesSearchQuery = task.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = !filterStatus || task.status === filterStatus;
     const matchesStartDate = !startDate || new Date(task.dueDate) >= new Date(startDate);
     const matchesEndDate = !endDate || new Date(task.dueDate) <= new Date(endDate);
-    const matchesAssignee = !selectedAssignee || task.user.name === selectedAssignee;
+    const matchesAssignee = !selectedAssignee || String(task.userId) === selectedAssignee;
 
     return matchesSearchQuery && matchesStatus && matchesStartDate && matchesEndDate && matchesAssignee;
   });
@@ -194,7 +191,7 @@ const AllTasksPage: React.FC<AllTasksPageProps> = ({ params }) => {
         <select value={selectedAssignee || ''} onChange={handleAssigneeChange} className="ml-2 p-2 border border-gray-400 rounded">
           <option value="">All Assignees</option>
           {assignees.map(assignee => (
-            <option key={assignee} value={assignee}>{assignee}</option>
+            <option key={assignee.id} value={assignee.id}>{assignee.name}</option>
           ))}
         </select>
       </div>
@@ -207,7 +204,7 @@ const AllTasksPage: React.FC<AllTasksPageProps> = ({ params }) => {
               <p>No TODO tasks.</p>
             ) : (
               categorizedTasks.TODO.map(task => (
-                <TaskCard
+                <TaskCard2
                   key={task.id}
                   id={task.id}
                   title={task.title}
@@ -216,6 +213,8 @@ const AllTasksPage: React.FC<AllTasksPageProps> = ({ params }) => {
                   projectTitle={task.project.title}
                   currentStatus={task.status}
                   onStatusChange={handleStatusChange}
+                  userId={task.userId} // Pass userId
+                  users={assignees} // Pass users
                 />
               ))
             )}
@@ -228,7 +227,7 @@ const AllTasksPage: React.FC<AllTasksPageProps> = ({ params }) => {
               <p>No In Progress tasks.</p>
             ) : (
               categorizedTasks.IN_PROGRESS.map(task => (
-                <TaskCard
+                <TaskCard2
                   key={task.id}
                   id={task.id}
                   title={task.title}
@@ -237,6 +236,8 @@ const AllTasksPage: React.FC<AllTasksPageProps> = ({ params }) => {
                   projectTitle={task.project.title}
                   currentStatus={task.status}
                   onStatusChange={handleStatusChange}
+                  userId={task.userId} 
+                  users={assignees} 
                 />
               ))
             )}
@@ -249,7 +250,7 @@ const AllTasksPage: React.FC<AllTasksPageProps> = ({ params }) => {
               <p>No Done tasks.</p>
             ) : (
               categorizedTasks.DONE.map(task => (
-                <TaskCard
+                <TaskCard2
                   key={task.id}
                   id={task.id}
                   title={task.title}
@@ -258,6 +259,8 @@ const AllTasksPage: React.FC<AllTasksPageProps> = ({ params }) => {
                   projectTitle={task.project.title}
                   currentStatus={task.status}
                   onStatusChange={handleStatusChange}
+                  userId={task.userId} // Pass userId
+                  users={assignees} // Pass users
                 />
               ))
             )}

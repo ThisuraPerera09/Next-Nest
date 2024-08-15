@@ -1,7 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import { Backend_URL } from '@/lib/Constants';
 import TaskCard from '@/components/TaskCard';
 
@@ -10,7 +9,7 @@ const UserTasksPage: React.FC = () => {
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState<string>(''); // New state for search query
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -20,10 +19,9 @@ const UserTasksPage: React.FC = () => {
       setLoading(false);
       return;
     }
-    const userId = session.user?.id; 
+    const userId = session.user?.id;
 
-    //get the tasks belongs to the user
-
+    // Get the tasks that belong to the user
     const fetchTasks = async () => {
       try {
         const response = await fetch(`${Backend_URL}/tasks/user/${userId}`, {
@@ -46,8 +44,7 @@ const UserTasksPage: React.FC = () => {
     fetchTasks();
   }, [session, status]);
 
-  //Update the task status
-
+  // Update the task status
   const handleStatusChange = async (taskId: number, newStatus: string) => {
     const taskToUpdate = tasks.find(task => task.id === taskId);
     if (!taskToUpdate) return;
@@ -57,8 +54,8 @@ const UserTasksPage: React.FC = () => {
       description: taskToUpdate.description,
       dueDate: taskToUpdate.dueDate,
       status: newStatus,
-      projectId: taskToUpdate.projectId, 
-      userId: taskToUpdate.userId,      
+      projectId: taskToUpdate.projectId,
+      userId: taskToUpdate.userId,
     };
 
     try {
@@ -87,16 +84,25 @@ const UserTasksPage: React.FC = () => {
 
       const updatedTasks = await tasksResponse.json();
       setTasks(updatedTasks);
-      
+
     } catch (error) {
       setError((error as Error).message);
     }
   };
 
+  const filteredTasks = tasks.filter(task => {
+    const query = searchQuery.toLowerCase();
+    return (
+      task.title.toLowerCase().includes(query) ||
+      task.description.toLowerCase().includes(query) ||
+      task.project.title.toLowerCase().includes(query)
+    );
+  });
+
   const categorizedTasks = {
-    TODO: tasks.filter(task => task.status === 'TODO'),
-    IN_PROGRESS: tasks.filter(task => task.status === 'IN_PROGRESS'),
-    DONE: tasks.filter(task => task.status === 'DONE'),
+    TODO: filteredTasks.filter(task => task.status === 'TODO'),
+    IN_PROGRESS: filteredTasks.filter(task => task.status === 'IN_PROGRESS'),
+    DONE: filteredTasks.filter(task => task.status === 'DONE'),
   };
 
   if (loading) return <div>Loading...</div>;
@@ -105,6 +111,18 @@ const UserTasksPage: React.FC = () => {
   return (
     <div className="p-4 max-w-8xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">My Tasks</h1>
+
+  
+      <div className="mb-4">
+        <input
+          type="text"
+          className="p-2 border border-gray-300 rounded"
+          placeholder="Search tasks.."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+
       <div className="flex space-x-4">
         <div className="flex-1 p-2 bg-gray-200">
           <h2 className="text-xl font-semibold mb-4">TODO</h2>

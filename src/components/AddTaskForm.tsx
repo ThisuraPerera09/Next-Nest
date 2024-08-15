@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Backend_URL } from '@/lib/Constants';
 import { useSession } from 'next-auth/react';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface AddTaskFormProps {
   projectId: number;
@@ -101,6 +103,7 @@ const AddTaskForm: React.FC<AddTaskFormProps> = ({ projectId, onTaskAdded, acces
       setError(error.message);
     } finally {
       setLoading(false);
+      toast.success('Task Added successfully!');
     }
   };
 

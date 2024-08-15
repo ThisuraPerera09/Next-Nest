@@ -10,7 +10,6 @@ interface UserTaskChartProps {
 
 const UserTaskChart: React.FC<UserTaskChartProps> = ({ tasks }) => {
   const getUserTaskData = (tasks: any[]) => {
-    // Create a mapping of user names to task counts
     const userTaskCounts = tasks.reduce((acc: any, task: any) => {
       const userName = task.user.name;
       acc[userName] = (acc[userName] || 0) + 1;

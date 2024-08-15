@@ -20,17 +20,15 @@ const EditProjectPage: React.FC<EditProjectPageProps> = ({ params }) => {
   const { data: session, status } = useSession();
   const [project, setProject] = useState({ title: '', description: '' });
   const [tasks, setTasks] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]); // State for users
+  const [users, setUsers] = useState<any[]>([]); 
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [taskError, setTaskError] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>(''); // State for search query
-  const [filterStatus, setFilterStatus] = useState<string | null>(null); // State for filter status
-  const [startDate, setStartDate] = useState<string>(''); // State for start date
-  const [endDate, setEndDate] = useState<string>(''); // State for end date
+  const [searchQuery, setSearchQuery] = useState<string>(''); 
   const router = useRouter();
+  
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -140,6 +138,8 @@ const EditProjectPage: React.FC<EditProjectPageProps> = ({ params }) => {
       if (!response.ok) {
         throw new Error('Failed to delete project');
       }
+
+      toast.success('Project deleted successfully!');
       router.push('/projects');
     } catch (error) {
       setError((error as Error).message);
@@ -161,18 +161,20 @@ const EditProjectPage: React.FC<EditProjectPageProps> = ({ params }) => {
   const handleTaskUpdate = async (updatedTask: any) => {
     try {
       const { id, ...taskWithoutId } = updatedTask;
+      const payload = { ...taskWithoutId, projectId: Number(projectid) };
       const updateResponse = await fetch(`${Backend_URL}/tasks/${id}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${session.backendTokens?.accessToken || ''}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(taskWithoutId),
+        body: JSON.stringify(payload),
       });
 
       if (!updateResponse.ok) {
         throw new Error('Failed to update task');
       }
+      toast.success('Task Details updated successfully!');
       const updatedTaskData = await updateResponse.json();
 
       const tasksResponse = await fetch(`${Backend_URL}/tasks/project/${updatedTaskData.projectId}`, {
@@ -226,6 +228,12 @@ const EditProjectPage: React.FC<EditProjectPageProps> = ({ params }) => {
     return user ? user.name : 'Unknown User';
   };
 
+  const filteredTasks = tasks.filter((task) =>
+    task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    task.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
@@ -254,6 +262,13 @@ const EditProjectPage: React.FC<EditProjectPageProps> = ({ params }) => {
         <div className="flex-1 p-2">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Tasks</h2>
+            <input
+              type="text"
+              placeholder="Search tasks..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="px-4 py-2 border rounded-lg"
+            />
 
             <button
               onClick={() => router.push(`/projects/edit/${projectid}/alltasks`)}
@@ -263,11 +278,11 @@ const EditProjectPage: React.FC<EditProjectPageProps> = ({ params }) => {
             </button>
           </div>
           <div className="h-[calc(100vh-10rem)] overflow-y-auto">
-            {tasks.length === 0 ? (
+            {filteredTasks.length === 0 ? (
               <p>No tasks found.</p>
             ) : (
               <ul className="space-y-4">
-                {tasks.map((task) => (
+                {filteredTasks.map((task) => (
                   <li key={task.id} className="p-4 border border-gray-200 rounded-lg flex justify-between items-center">
                     <div>
                       <h3 className="text-lg font-semibold">{task.title}</h3>
